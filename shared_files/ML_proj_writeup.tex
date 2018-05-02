@@ -14,6 +14,8 @@
 \usepackage{color} %red, green, blue, yellow, cyan, magenta, black, white
 \definecolor{mygreen}{RGB}{28,172,0} % color values Red, Green, Blue
 \definecolor{mylilas}{RGB}{170,55,241}
+\definecolor{light-gray}{gray}{0.95}
+\newcommand{\code}[1]{\colorbox{light-gray}{\texttt{#1}}}
 
 %Config to display Python code nicely
 \lstset{language=Python,%
@@ -35,7 +37,6 @@
 
 \author{Daniel Rojas Coy, Lucas Duarte Bahia, Skander Soltani\\ Harveen Oberoi, Jordan Giebas}
 
-
 \begin{document}
 
 \title{Machine Learning 2 Project:\\ \textit{Predicting Bond Prices Using Many Methods}}
@@ -54,16 +55,77 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 \section{Introduction}
 
+The inspiration for our project was from the paper (title written by (authors+reference), and the main purpose of this project was to dissect this paper, replicate the results, and potentially explore additional, novel methods the paper had not considered. The data used in the (author + et al) paper, and subsequently ours, was taken from a Kaggle competition in 2012 sponsored by Benchmark Solutions. Both our paper and theirs considered supervised machine learning methods; that is, the ultimate goal was to predict bond prices from the data set provided. Given the nature of the Kaggle competition, the testing data set did not include the response variable. Therefore, our group worked solely with the training data set provided, which forced us to figure out how to split the data set into a true training, testing, and validation set. Many of the machine learning methods employed can be found in the original paper, as our main goal was to replicate these reults. This includes: PCA, OLS, WLS, Random Forests, Boosted Trees, and simple feed-foward Neural Networks (multi-layer perceptrons). Additionally, outside of the original paper, we decided to train a recurrent neural network to exploit the temporal structure within our data set. 
 
 \section{Data Prepartion}
 
+Our initial time was spent analyzing and understanding our data set. The 'training' set provided by the Kaggle competition, from here on referred to as the 'complete' data set, included 61 features for 762,678 observations. All 762,678 observations were not independent however, as many observations were grouped together through a feature titled \code{bondId}. In the complete data set, there were 3736 \code{bondId} s; furthermore, there were also 439351 \code{nan} values present within the complete data set. Forward thinking about many of the methods we needed to implement, we chose to filter this data set on two conditions:
+
+\begin{enumerate}
+  \item No row contained an NA value
+  \item There must be a minimum of 25 rows for a given \code{bondId}
+\end{enumerate}
+
+24,158 observations were dropped from the complete data set due to failing the above criterion. The resulting 'clean' data set included 61 features and 738,520 observations. 
+\textbf{(PCA Here???)} 
+
+\subsection{Splitting the data}
+
+The clean data set had to be split with caution due to its temporal structure, and imbalances among differeing \code{bondID}s. Specifically, the following algorithm was used to obtain the true-training, testing, and validation sets. \\
+
+\begin{lstlisting}[language=Python]
+# init dataframes
+train_df_list = []; test1_df_list = [] 
+test2_df_list = []
+
+# Populate dataframes
+iterable = sorted(list(set(clean_data.bond_id)))
+for bondID in iterable:
+    
+    df = clean_data[clean_data['bond_id'] == bondID]
+    N  = len(df)
+    
+    train_df_list.append( df.iloc[:int(np.floor(0.7*N)), :] )
+    test1_df_list.append( df.iloc[int(np.floor(0.7*N)):int(np.floor(0.85*N)), :] )
+    test2_df_list.append( df.iloc[int(np.floor(0.85*N)):, :] )
+
+# Stack dataframes in respective lists
+train_df = pd.concat(train_df_list)
+test1_df = pd.concat(test1_df_list)
+test2_df = pd.concat(test2_df_list)
+
+# Split into training / testing sets
+y_train = train_df.trade_price; X_train = train_df.drop('trade_price', axis=1)
+y_test1 = test1_df.trade_price; X_test1 = test1_df.drop('trade_price', axis=1)
+y_test2 = test2_df.trade_price; X_test2 = test2_df.drop('trade_price', axis=1)
+\end{lstlisting}
+
+(Should we put this, should I just generally explain it. kind of hard to explain bc you have to go into detail about the structure of the dataset [how for a given bondID as you go down the rows, the time to maturity decreases so grabbing the first 70 percent gets you the earliest times/trades, the next 15, the next 15 go further into the future... maybe that wasn't so bad])
+
 \section{Algorithms Used}
+
+\subsection{OLS}
+
+\subsection{WLS}
+
+\subsection{SVM}
+
+\subsection{Random Forest}
+
+\subsection{Boosting}
+
+\subsection{ARIMA}
+
+\subsection{Neural Networks}
 
 \section{Additional Methods}
 
 \section{Results}
 
-\section{Avenues of Pursuit}
+\section{Avenues of Pursuit/Further Work/What we could do differently}
+
+1) In the data cleaning section, rather than throwing away `nan`s, we could have chosen to fill in these missing values through a variety of different methods. (...) is a classic text in the literature for doing so. 
+2) Given more time, finding a proper architecture for the ffNNs would probably have done justice. 
 
 \section{Conclusion}
 
